@@ -16,7 +16,7 @@
 </canvas>
     <h3> <i onclick="myFunction(this)" class="fa fa-thumbs-up"></i></h3>
 <script> 
-
+var gameover = 0;
 function myFunction(x) {
     x.classList.toggle("fa-thumbs-down");
 }
@@ -135,6 +135,7 @@ function display_intro_instructions () {
 function display_game_over () {
    var score = 0;
    var highscore = localStorage.getItem("highscore");
+   var played = localStorage.getItem("played");
    
     for (var i=0; i < pipes.length; i++) {
         if (pipes[i].x < bird.x) score = score + 0.5;
@@ -147,12 +148,27 @@ function display_game_over () {
 	else{
 		localStorage.setItem("highscore", score);
 	}
+	if(played !== null){
+		if (gameover == 0) {
+			played++;
+			localStorage.setItem("played", played);
+		}
+	}
+	else{
+		localStorage.setItem("played", 1);
+	}
+	gameover = 1;
     ctx.font= "30px Arial";
     ctx.fillStyle= "red";
     ctx.textAlign="center";
-    ctx.fillText("Game Over", myCanvas.width / 2, 100);  
-    ctx.fillText("Score: " + score, myCanvas.width / 2, 150);
-	ctx.fillText("High Score: " + highscore, myCanvas.width / 2, 200);  
+    ctx.fillText("Game Over", myCanvas.width / 2, 100);
+	ctx.font= "15px Arial";
+	ctx.textAlign="left";
+    ctx.fillText("       Score: " + score, 50, 150);
+	ctx.fillText("Best Score: " + highscore, 50, 175);
+	ctx.fillText("Total Plays: " + played, 50, 200);
+	ctx.font= "30px Arial";
+	ctx.textAlign="center";
     ctx.font= "20px Arial";
     ctx.fillText("Click, touch, or press to play again", myCanvas.width / 2, 300);  
    }
@@ -165,6 +181,7 @@ function reset_game() {
       bird.angle= 0;
       pipes=[];                           // erase all the pipes from the array
       add_all_my_pipes();                 // and load them back in their starting positions 
+	  gameover = 0;
       }
 function add_all_my_pipes() {
     add_pipe(500,  100, 140);
