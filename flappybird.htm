@@ -46,6 +46,10 @@ var time_game_last_running;
 var bottom_bar_offset = 0;
 var pipes = [];
 var gameover = 0;
+
+if (window.innerWidth < 320) { ctx.canvas.width  = window.innerWidth; }
+if (window.innerHeight < 480) { ctx.canvas.height = window.innerHeight; }
+  
 function MySprite(img_url) {
 	this.x = 0;
 	this.y = 0;
