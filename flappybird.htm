@@ -11,12 +11,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
  </head>
  <body>
+ <style>
+ @font-face {
+  font-family: 'Flappy Birdy';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Flappy Birdy'),
+       local('FlappyBirdy'),
+       url(font/flappybirdy.ttf) format('truetype');
+ }
+ </style>
 <canvas id="myCanvas" width=320 height=480 
  style="background:url('img/flappyback.png');  background-size: 100%; height: 100% " 
 </canvas>
     <h3> <i onclick="myFunction(this)" class="fa fa-thumbs-up"></i></h3>
 <script> 
-var gameover = 0;
+
 function myFunction(x) {
     x.classList.toggle("fa-thumbs-down");
 }
@@ -32,7 +42,7 @@ function myFunction(x) {
  var time_game_last_running;        
  var bottom_bar_offset = 0;         
  var pipes = [];                      
-
+ var gameover = 0;
 
  function MySprite (img_url) {
     this.x = 0;
@@ -52,7 +62,7 @@ function myFunction(x) {
     ctx.rotate(this.angle * Math.PI / 180);                       
     if (this.flipV) ctx.scale(1,-1);                              
     if (this.flipH) ctx.scale(-1,1);
-   if (this.visible) ctx.drawImage(this.MyImg, -this.MyImg.width/2, -this.MyImg.height/2);
+    if (this.visible) ctx.drawImage(this.MyImg, -this.MyImg.width/2, -this.MyImg.height/2);
     this.x = this.x + this.velocity_x;
     this.y = this.y + this.velocity_y;                            
     ctx.restore();                                               
@@ -127,10 +137,16 @@ function check_for_end_game() {
      if (ImagesTouching(bird, pipes[i])) game_mode = "over";   
    }
 function display_intro_instructions () {
-   ctx.font= "25px Arial";
-   ctx.fillStyle= "red";
+    var highscore = localStorage.getItem("highscore");
+    if (highscore !== null) {
+		ctx.font= "30px Flappy Birdy";
+		ctx.textAlign="right";
+		ctx.fillText(" Best:" + highscore, myCanvas.width - 10, 25);
+	}
+   ctx.font= "35px Flappy Birdy";
+   ctx.fillStyle= "black";
    ctx.textAlign="center";
-   ctx.fillText("Press, touch or click to start", myCanvas.width / 2, myCanvas.height / 4);  
+   ctx.fillText("Press, touch or click to start", myCanvas.width / 2, myCanvas.height / 4);
    }
 function display_game_over () {
    var score = 0;
@@ -158,18 +174,20 @@ function display_game_over () {
 		localStorage.setItem("played", 1);
 	}
 	gameover = 1;
-    ctx.font= "30px Arial";
-    ctx.fillStyle= "red";
-    ctx.textAlign="center";
-    ctx.fillText("Game Over", myCanvas.width / 2, 100);
-	ctx.font= "15px Arial";
-	ctx.textAlign="left";
-    ctx.fillText("       Score: " + score, 50, 150);
-	ctx.fillText("Best Score: " + highscore, 50, 175);
-	ctx.fillText("Total Plays: " + played, 50, 200);
-	ctx.font= "30px Arial";
+    ctx.font= "72px Flappy Birdy";
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.fillText("Game Over", myCanvas.width / 2, myCanvas.height/2);
+	ctx.font= "30px Flappy Birdy";
 	ctx.textAlign="center";
-    ctx.font= "20px Arial";
+    ctx.fillText("Score:" + score, myCanvas.width / 2, 25);
+	ctx.textAlign="right";
+	ctx.fillText(" Best:" + highscore, myCanvas.width - 10, 25);
+	ctx.textAlign="left";
+	ctx.fillText("Plays:" + played, 10, 25);
+	ctx.font= "35px Flappy Birdy";
+	ctx.textAlign="center";
+    ctx.font= "30px Flappy Birdy";
     ctx.fillText("Click, touch, or press to play again", myCanvas.width / 2, 300);  
    }
 function display_bar_running_along_bottom() {
@@ -184,21 +202,18 @@ function reset_game() {
 	  gameover = 0;
       }
 function add_all_my_pipes() {
-    add_pipe(500,  100, 140);
-    add_pipe(800,   50, 140);
-    add_pipe(1000, 250, 140);
-    add_pipe(1200, 150, 120);
-    add_pipe(1600, 100, 120);
-    add_pipe(1800, 150, 120);
-    add_pipe(2000, 200, 120);
-    add_pipe(2200, 250, 120);
-    add_pipe(2400,  30, 100);
-    add_pipe(2700, 300, 100);
-    add_pipe(3000, 100,  80);
-    add_pipe(3300, 250,  80);
-    add_pipe(3600,  50,  60);
+	x = 500;
+	z = 140;
+	
+	for (var i=0; i < 5; i++) {          // Mouth size reduction in 5 stages, base of 140, -20 per stage.
+		for (var s=0; s < 5; s++) {      // Five Pipes per stage.
+			add_pipe(x, Math.floor(Math.random() * 280) + 20, 140 - (20 * i));
+			x = x + Math.floor(Math.random() * 150) + 150;
+		}
+    }
+
     var finish_line = new MySprite("img/flappyend.png");
-    finish_line.x = 3900;
+    finish_line.x = x;
     finish_line.velocity_x = pipe_speed;
     pipes.push(finish_line);
     }
@@ -206,31 +221,35 @@ function add_all_my_pipes() {
  pipe_piece.onload = add_all_my_pipes;                       
  pipe_piece.src = "img/flappypipe.png" ;
 function Do_a_Frame () {
-    ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);   
-    bird.Do_Frame_Things(); 
-    display_bar_running_along_bottom();
-    switch (game_mode) {
-        case 'prestart': {
-                          display_intro_instructions();
-                          break;
-                          } 
-        case 'running': {
-                         time_game_last_running = new Date(); 
-                         bottom_bar_offset = bottom_bar_offset + pipe_speed; 
-                         show_the_pipes();
-                         make_bird_tilt_appropriately();
-                         make_bird_slow_and_fall();
-                         check_for_end_game();
-                         break;
-                         }
-        case 'over': {
-						make_bird_tilt_appropriately();
-						make_bird_slow_and_fall();
-						display_game_over();
-						break;
-                     } 
-        } 
-    }
+	if (gameover == 0 || gameover == 2) {                      // Optimize by not repainting when at a terminal state.
+		ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);   
+		bird.Do_Frame_Things(); 
+		display_bar_running_along_bottom();
+		switch (game_mode) {
+			case 'prestart':{
+							display_intro_instructions();
+							break;
+							} 
+			case 'running': {
+							time_game_last_running = new Date(); 
+							bottom_bar_offset = bottom_bar_offset + pipe_speed; 
+							show_the_pipes();
+							make_bird_tilt_appropriately();
+							make_bird_slow_and_fall();
+							check_for_end_game();
+							break;
+							}
+			case 'over': {
+
+							make_bird_tilt_appropriately();
+							make_bird_slow_and_fall();
+							display_game_over();
+							gameover++						   // Gameover has arrived, increase gameover to stop frame repainting until reset. 
+							break;
+						 } 
+			} 
+		}
+	}
  var bottom_bar = new Image();
  bottom_bar.src = "img/flappybottom.png" ;
 
